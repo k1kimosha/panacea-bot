@@ -1,9 +1,9 @@
-import mysqlController from "../mysql";
+import mysqlController from "../mysql.js";
 
 class LocalesModel {
 
     async getLocale(guildId: string) {
-        const getLocale: { guildId: string, locale: string }[] | number = await mysqlController.execute("SELECT * FROM `locales` WHERE guildId = ?", [guildId]);
+        const getLocale: { guildId: string, locale: "en-US" }[] | number = await mysqlController.execute("SELECT * FROM `locales` WHERE guildId = ?", [guildId]);
 
         if (getLocale === 404)
             return { status: false, code: 1 };
@@ -16,7 +16,7 @@ class LocalesModel {
         }
     }
 
-    async addLocale(guildId: string, locale: string) {
+    async addLocale(guildId: string, locale: "en-US") {
         const addLocale: { affectedRows: number } | number = await mysqlController.execute("INSERT INTO `locales` (guildId, locale) VALUES (?, ?)", [guildId, locale]);
 
         if (addLocale === 404)
@@ -30,7 +30,7 @@ class LocalesModel {
         }
     }
 
-    async setLocale(guildId: string, options: { locale: string }) {
+    async setLocale(guildId: string, options: { locale: "en-US" }) {
         const setLocale: { changedRows: number } | number = await mysqlController.execute("UPDATE `locales` SET ? WHERE guildId = ?", [options, guildId]);
 
         if (setLocale === 404)
