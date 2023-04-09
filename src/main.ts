@@ -46,4 +46,6 @@ async function run() {
   await bot.login(process.env.BOT_TOKEN);
 }
 
+export var aLock: {[uuid:string]: number};
+
 run();
