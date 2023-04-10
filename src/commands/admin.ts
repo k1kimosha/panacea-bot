@@ -1,7 +1,9 @@
-import { ApplicationCommandOptionType, CommandInteraction, EmbedBuilder, Locale } from "discord.js";
+import { ApplicationCommandOptionType, CommandInteraction, EmbedBuilder, GuildMember, Locale } from "discord.js";
 import { Discord, Slash, SlashChoice, SlashGroup, SlashOption } from "discordx";
 import { locales } from "../locales/locales.js";
 import localesModel from "../models/locales.js";
+import { aLock } from "../main.js";
+import alocksModel from "../models/alocks.js";
 
 @Discord()
 @SlashGroup({
@@ -158,6 +160,68 @@ export class Admin {
           }
         }
       }
+    }
+  }
+
+  @Slash({
+    name: "clearalock",
+    description: "clear lock"
+  })
+  async clearalock(
+    @SlashOption({
+      name: "admin",
+      description: "admin",
+      required: true,
+      type: ApplicationCommandOptionType.User
+    })
+    admin: GuildMember,
+    interaction: CommandInteraction
+  ) {
+    if (!interaction.inGuild()) {
+      await interaction.reply({ content: "what!?" });
+    } else {
+      await interaction.deferReply({ ephemeral: true });
+
+      if (aLock[admin.id]) {
+        delete aLock[admin.id];
+        const delALcoks = await alocksModel.delALock(admin.id);
+
+        if (!delALcoks?.status) {
+          switch (delALcoks!.code) {
+            case 404:
+              await interaction.editReply({});
+              break;
+            case 0:
+              await interaction.editReply({});
+              break;
+          }
+        } else {
+          await interaction.editReply({});
+        }
+      } else {
+        await interaction.editReply({});
+      }
+    }
+  }
+
+  @Slash({
+    name: "telegramconnect",
+    description: "Connect telegram bot"
+  })
+  async telegramconnect(
+    @SlashOption({
+      name: "code",
+      description: "code",
+      required: true,
+      type: ApplicationCommandOptionType.String
+    })
+    code: string,
+    interaction: CommandInteraction
+  ) {
+    if (!interaction.inGuild()) {
+      await interaction.reply({content: "what!?"});
+    } else {
+      
     }
   }
 }

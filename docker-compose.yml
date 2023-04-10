@@ -4,7 +4,8 @@ services:
     build: .
     command: node build/main.js
     environment:
-      - BOT_TOKEN=${BOT_TOKEN}
+      - BOT_TOKEN_DISCORD=${BOT_TOKEN_DISCORD}
+      - BOT_TOKEN_TELEGRAF=${BOT_TOKEN_TELEGRAF}
       - MYSQL_HOST=${MYSQL_HOST}
       - MYSQL_PORT=${MYSQL_PORT}
       - MYSQL_USER=${MYSQL_USER}
