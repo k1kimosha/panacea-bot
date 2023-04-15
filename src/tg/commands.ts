@@ -1,26 +1,20 @@
-import { tgbot } from "../main.js";
+import { Composer } from "telegraf";
 import { hash } from "../hash.js";
-import tgConnectsModel from "../models/tgconnects.js";
+import telegramChatsModel from "../models/telegramChats.js";
 
-tgbot.start((ctx) => {
-    ctx.reply("For start use /connect");
-})
-
-tgbot.command("connect", async (ctx) => {
+export const command = Composer.command("connect", async (ctx) => {
     let code = `${ctx.chat.id}:${hash(`${ctx.chat.id}:${ctx.chat.id}`)}`;
-    const getConnect = await tgConnectsModel.getConnect(code);
+    const getChat = await telegramChatsModel.getChat(ctx.chat.id);
 
-    if (!getConnect?.status) {
-        switch (getConnect?.code) {
-            case 0:
-                await tgConnectsModel.addConnect(code);
-                ctx.reply(`Connection process started enter the ${code} in discord.`);
-                break;
-            case 404:
-                ctx.reply("error");
-                break;
-        }
-    } else {
-        ctx.reply(`For connect use ${code} in discord.`);
-    }
+    if (!getChat?.status && getChat?.code == 1)
+        ctx.reply("Sorry we had the problem");
+    else if (!getChat?.status) {
+        const addChat = await telegramChatsModel.addChat(ctx.chat.id, code);
+
+        if (!addChat?.status && addChat?.code === 1)
+            ctx.reply("Sorry we had the problem");
+        else if (!addChat?.status)
+            ctx.reply("Something error");
+        else ctx.reply(`Use this in discord ${code}`);
+    } else ctx.reply(`Use this in discord ${code}`);
 })

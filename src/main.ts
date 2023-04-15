@@ -3,6 +3,8 @@ import type { Interaction, Message } from "discord.js";
 import { IntentsBitField } from "discord.js";
 import { Client } from "discordx";
 import { Telegraf } from "telegraf";
+import {  } from "telegraf/filters.js";
+import { command } from "./tg/commands.js";
 
 export const bot = new Client({
   intents: [
@@ -25,6 +27,10 @@ if (!process.env.BOT_TOKEN_TELEGRAF)
   throw Error("Could not find BOT_TOKEN_TELEGRAF in your environment");
 
 export const tgbot = new Telegraf(process.env.BOT_TOKEN_TELEGRAF);
+
+tgbot.start((ctx) => { ctx.reply("Use /connect") });
+tgbot.use(command);
+
 tgbot.launch();
 
 bot.once("ready", async () => {

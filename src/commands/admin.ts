@@ -2,8 +2,11 @@ import { ApplicationCommandOptionType, CommandInteraction, EmbedBuilder, GuildMe
 import { Discord, Slash, SlashChoice, SlashGroup, SlashOption } from "discordx";
 import { locales } from "../locales/locales.js";
 import localesModel from "../models/locales.js";
-import { aLock } from "../main.js";
 import alocksModel from "../models/alocks.js";
+import { aLock } from "../main.js";
+import telegramChatsModel from "../models/telegramChats.js";
+import telegramConnectsModel from "../models/telegramConnects.js";
+import sendMessagetoTelegram from "../tg/contoller.js";
 
 @Discord()
 @SlashGroup({
@@ -54,42 +57,42 @@ export class Admin {
 
       const getLocale = await localesModel.getLocale(interaction.guildId);
 
-      if (!getLocale?.status) {
-        switch (getLocale?.code) {
+      if (!getLocale!.status) {
+        switch (getLocale!.code) {
           case 0:
             await localesModel.addLocale(interaction.guildId, "en-US");
             if (locale === undefined) {
               //Returns an information about the currently installed language on the server
               let embedInfo = new EmbedBuilder({
-                title: locales({ locale: interaction.locale, guildLocale: "en-US" })!.admin.responses.locale.info.title,
-                description: locales({ locale: interaction.locale, guildLocale: "en-US" })!.admin.responses.locale.info.description.replace("$lang", locales({ locale: interaction.locale, guildLocale: "en-US" })!.locale)
+                title: locales({ locale: interaction.locale, language: "en-US" })!.admin.responses.locales.info.title,
+                description: locales({ locale: interaction.locale, language: "en-US" })!.admin.responses.locales.info.description.replace("$lang", locales({ locale: interaction.locale, language: "en-US" })!.locale)
               }).setColor("Green");
               await interaction.editReply({ embeds: [embedInfo] });
             } else if ("en-US" == locale) {
               //Returns an error if the requested language is already installed on the server
               let embedErrorAI = new EmbedBuilder({
-                title: locales({ locale: interaction.locale, guildLocale: "en-US" })!.admin.responses.locale.errorAI.title,
-                description: locales({ locale: interaction.locale, guildLocale: "en-US" })!.admin.responses.locale.errorAI.description
+                title: locales({ locale: interaction.locale, language: "en-US" })!.admin.responses.locales.errorAI.title,
+                description: locales({ locale: interaction.locale, language: "en-US" })!.admin.responses.locales.errorAI.description
               }).setColor("Red");
               await interaction.editReply({ embeds: [embedErrorAI] });
             } else {
               const setLocale = await localesModel.setLocale(interaction.guildId, { locale: locale });
 
-              if (!setLocale?.status) {
-                switch (setLocale?.code) {
+              if (!setLocale!.status) {
+                switch (setLocale!.code) {
                   case 0:
                     //Returns an error if the desired language is already set
                     let embedErrorFC = new EmbedBuilder({
-                      title: locales({ locale: interaction.locale, guildLocale: "en-US" })!.admin.responses.locale.errorFC.title,
-                      description: locales({ locale: interaction.locale, guildLocale: "en-US" })!.admin.responses.locale.errorFC.description
+                      title: locales({ locale: interaction.locale, language: "en-US" })!.admin.responses.locales.errorFC.title,
+                      description: locales({ locale: interaction.locale, language: "en-US" })!.admin.responses.locales.errorFC.description
                     }).setColor("Red");
                     await interaction.editReply({ embeds: [embedErrorFC] });
                     break;
                   case 1:
                     //Returns an error in case of a database crash
                     let embedErrorCS = new EmbedBuilder({
-                      title: locales({ locale: locale, guildLocale: interaction.locale })!.admin.responses.locale.errorSC.title,
-                      description: locales({ locale: locale, guildLocale: interaction.locale })!.admin.responses.locale.errorSC.description
+                      title: locales({ locale: interaction.locale, language: locale })!.admin.responses.locales.errorSC.title,
+                      description: locales({ locale: interaction.locale, language: locale })!.admin.responses.locales.errorSC.description
                     }).setColor("#000");
                     await interaction.editReply({ embeds: [embedErrorCS] });
                     break;
@@ -97,8 +100,8 @@ export class Admin {
               } else {
                 //Returns a message about the successful language change
                 let embedSuccess = new EmbedBuilder({
-                  title: locales({ locale: interaction.locale, guildLocale: "en-US" })!.admin.responses.locale.success.title,
-                  description: locales({ locale: interaction.locale, guildLocale: "en-US" })!.admin.responses.locale.success.description.replace("$lang", locales({ language: locale })!.locale)
+                  title: locales({ locale: interaction.locale, language: "en-US" })!.admin.responses.locales.success.title,
+                  description: locales({ locale: interaction.locale, language: "en-US" })!.admin.responses.locales.success.description.replace("$lang", locales({ language: locale })!.locale)
                 }).setColor("Green");
                 await interaction.editReply({ embeds: [embedSuccess] });
               }
@@ -107,8 +110,8 @@ export class Admin {
           case 1:
             //Returns an error in case of a database crash
             let embedErrorCS = new EmbedBuilder({
-              title: locales({ locale: locale, guildLocale: interaction.locale, language: "en-US" })!.admin.responses.locale.errorSC.title,
-              description: locales({ locale: locale, guildLocale: interaction.locale, language: "en-US" })!.admin.responses.locale.errorSC.description
+              title: locales({ locale: locale, language: "en-US" })!.admin.responses.locales.errorSC.title,
+              description: locales({ locale: locale, language: "en-US" })!.admin.responses.locales.errorSC.description
             }).setColor("#000000");
             await interaction.editReply({ embeds: [embedErrorCS] });
             break;
@@ -117,35 +120,35 @@ export class Admin {
         if (locale === undefined) {
           //Returns an information about the currently installed language on the server
           let embedInfo = new EmbedBuilder({
-            title: locales({ locale: interaction.locale, guildLocale: getLocale.getLocale![0].locale })!.admin.responses.locale.info.title,
-            description: locales({ locale: interaction.locale, guildLocale: getLocale.getLocale![0].locale })!.admin.responses.locale.info.description.replace("$lang", locales({ locale: interaction.locale, guildLocale: getLocale.getLocale![0].locale })!.locale)
+            title: locales({ locale: interaction.locale, guildLocale: getLocale!.getLocale![0].locale })!.admin.responses.locales.info.title,
+            description: locales({ locale: interaction.locale, guildLocale: getLocale!.getLocale![0].locale })!.admin.responses.locales.info.description.replace("$lang", locales({ guildLocale: getLocale!.getLocale![0].locale })!.locale)
           }).setColor("Green");
           await interaction.editReply({ embeds: [embedInfo] });
-        } else if (getLocale.getLocale![0].locale == locale) {
+        } else if (getLocale!.getLocale![0].locale == locale) {
           //Returns an error if the requested language is already installed on the server
           let embedErrorAI = new EmbedBuilder({
-            title: locales({ locale: interaction.locale, guildLocale: getLocale.getLocale![0].locale })!.admin.responses.locale.errorAI.title,
-            description: locales({ locale: interaction.locale, guildLocale: getLocale.getLocale![0].locale })!.admin.responses.locale.errorAI.description
+            title: locales({ locale: interaction.locale, guildLocale: getLocale!.getLocale![0].locale })!.admin.responses.locales.errorAI.title,
+            description: locales({ locale: interaction.locale, guildLocale: getLocale!.getLocale![0].locale })!.admin.responses.locales.errorAI.description
           }).setColor("Red");
           await interaction.editReply({ embeds: [embedErrorAI] });
         } else {
           const setLocale = await localesModel.setLocale(interaction.guildId, { locale: locale });
 
-          if (!setLocale?.status) {
-            switch (setLocale?.code) {
+          if (!setLocale!.status) {
+            switch (setLocale!.code) {
               case 0:
                 //Returns an error if the desired language is already set
                 let embedErrorFC = new EmbedBuilder({
-                  title: locales({ locale: interaction.locale, guildLocale: getLocale.getLocale![0].locale })!.admin.responses.locale.errorFC.title,
-                  description: locales({ locale: interaction.locale, guildLocale: getLocale.getLocale![0].locale })!.admin.responses.locale.errorFC.description
+                  title: locales({ locale: interaction.locale, guildLocale: getLocale!.getLocale![0].locale })!.admin.responses.locales.errorFC.title,
+                  description: locales({ locale: interaction.locale, guildLocale: getLocale!.getLocale![0].locale })!.admin.responses.locales.errorFC.description
                 }).setColor("Red");
                 await interaction.editReply({ embeds: [embedErrorFC] });
                 break;
               case 1:
                 //Returns an error in case of a database crash
                 let embedErrorCS = new EmbedBuilder({
-                  title: locales({ locale: locale, guildLocale: interaction.locale })!.admin.responses.locale.errorSC.title,
-                  description: locales({ locale: locale, guildLocale: interaction.locale })!.admin.responses.locale.errorSC.description
+                  title: locales({ locale: interaction.locale, guildLocale: getLocale!.getLocale![0].locale })!.admin.responses.locales.errorSC.title,
+                  description: locales({ locale: interaction.locale, guildLocale: getLocale!.getLocale![0].locale })!.admin.responses.locales.errorSC.description
                 }).setColor("#000");
                 await interaction.editReply({ embeds: [embedErrorCS] });
                 break;
@@ -153,8 +156,8 @@ export class Admin {
           } else {
             //Returns a message about the successful language change
             let embedSuccess = new EmbedBuilder({
-              title: locales({ locale: interaction.locale, guildLocale: getLocale.getLocale![0].locale })!.admin.responses.locale.success.title,
-              description: locales({ locale: interaction.locale, guildLocale: getLocale.getLocale![0].locale })!.admin.responses.locale.success.description.replace("$lang", locales({ language: locale })!.locale)
+              title: locales({ locale: interaction.locale, guildLocale: getLocale!.getLocale![0].locale })!.admin.responses.locales.success.title,
+              description: locales({ locale: interaction.locale, guildLocale: getLocale!.getLocale![0].locale })!.admin.responses.locales.success.description.replace("$lang", locales({ language: locale })!.locale)
             }).setColor("Green");
             await interaction.editReply({ embeds: [embedSuccess] });
           }
@@ -165,12 +168,24 @@ export class Admin {
 
   @Slash({
     name: "clearalock",
-    description: "clear lock"
+    description: "Remove moderator restrictions",
+    nameLocalizations: {
+      "en-US": locales({ language: "en-US" })!.admin.commands.clearalock.title
+    },
+    descriptionLocalizations: {
+      "en-US": locales({ language: "en-US" })!.admin.commands.clearalock.description
+    }
   })
   async clearalock(
     @SlashOption({
-      name: "admin",
-      description: "admin",
+      name: "moderator",
+      description: "Moderator from whom restrictions must be removed",
+      nameLocalizations: {
+        "en-US": locales({ language: "en-US" })!.admin.commands.clearalock.options.admin.name
+      },
+      descriptionLocalizations: {
+        "en-US": locales({ language: "en-US" })!.admin.commands.clearalock.options.admin.description
+      },
       required: true,
       type: ApplicationCommandOptionType.User
     })
@@ -182,36 +197,106 @@ export class Admin {
     } else {
       await interaction.deferReply({ ephemeral: true });
 
-      if (aLock[admin.id]) {
-        delete aLock[admin.id];
-        const delALcoks = await alocksModel.delALock(admin.id);
+      const getLocale = await localesModel.getLocale(interaction.guildId);
 
-        if (!delALcoks?.status) {
-          switch (delALcoks!.code) {
-            case 404:
-              await interaction.editReply({});
-              break;
-            case 0:
-              await interaction.editReply({});
-              break;
+      if (!getLocale!.status) {
+        //What to do if the server localization is not configured
+        if (aLock[admin.id]) {
+          delete aLock[admin.id];
+          const delALcoks = await alocksModel.delALock(admin.id);
+
+          if (!delALcoks!.status) {
+            switch (delALcoks!.code) {
+              case 0:
+                let embedSuccess = new EmbedBuilder({
+                  title: locales({ locale: interaction.locale, language: "en-US" })!.admin.responses.clearalock.success.title,
+                  description: locales({ locale: interaction.locale, language: "en-US" })!.admin.responses.clearalock.success.description
+                }).setColor("Green");
+                await interaction.editReply({ embeds: [embedSuccess] });
+                break;
+              case 1:
+                let embedErrorSC = new EmbedBuilder({
+                  title: locales({ locale: interaction.locale, language: "en-US" })!.admin.responses.clearalock.errorSC.title,
+                  description: locales({ locale: interaction.locale, language: "en-US" })!.admin.responses.clearalock.errorSC.description
+                }).setColor("#000");
+                await interaction.editReply({ embeds: [embedErrorSC] });
+                break;
+            }
+          } else {
+            let embedSuccess = new EmbedBuilder({
+              title: locales({ locale: interaction.locale, language: "en-US" })!.admin.responses.clearalock.success.title,
+              description: locales({ locale: interaction.locale, language: "en-US" })!.admin.responses.clearalock.success.description
+            }).setColor("Green");
+            await interaction.editReply({ embeds: [embedSuccess] });
           }
         } else {
-          await interaction.editReply({});
+          let embedErrorHR = new EmbedBuilder({
+            title: locales({ locale: interaction.locale, language: "en-US" })!.admin.responses.clearalock.errorHR.title,
+            description: locales({ locale: interaction.locale, language: "en-US" })!.admin.responses.clearalock.errorHR.description
+          }).setColor("Red");
+          await interaction.editReply({ embeds: [embedErrorHR] });
         }
       } else {
-        await interaction.editReply({});
+        //What to do if the server localization is configured
+        if (aLock[admin.id]) {
+          delete aLock[admin.id];
+          const delALcoks = await alocksModel.delALock(admin.id);
+
+          if (!delALcoks!.status) {
+            switch (delALcoks!.code) {
+              case 0:
+                let embedSuccess = new EmbedBuilder({
+                  title: locales({ locale: interaction.locale, guildLocale: getLocale!.getLocale![0].locale })!.admin.responses.clearalock.success.title,
+                  description: locales({ locale: interaction.locale, guildLocale: getLocale!.getLocale![0].locale })!.admin.responses.clearalock.success.description
+                }).setColor("Green");
+                await interaction.editReply({ embeds: [embedSuccess] });
+                break;
+              case 1:
+                let embedErrorSC = new EmbedBuilder({
+                  title: locales({ locale: interaction.locale, guildLocale: getLocale!.getLocale![0].locale })!.admin.responses.clearalock.errorSC.title,
+                  description: locales({ locale: interaction.locale, guildLocale: getLocale!.getLocale![0].locale })!.admin.responses.clearalock.errorSC.description
+                }).setColor("#000");
+                await interaction.editReply({ embeds: [embedErrorSC] });
+                break;
+            }
+          } else {
+            let embedSuccess = new EmbedBuilder({
+              title: locales({ locale: interaction.locale, guildLocale: getLocale!.getLocale![0].locale })!.admin.responses.clearalock.success.title,
+              description: locales({ locale: interaction.locale, guildLocale: getLocale!.getLocale![0].locale })!.admin.responses.clearalock.success.description
+            }).setColor("Green");
+            await interaction.editReply({ embeds: [embedSuccess] });
+          }
+        } else {
+          let embedErrorHR = new EmbedBuilder({
+            title: locales({ locale: interaction.locale, guildLocale: getLocale!.getLocale![0].locale })!.admin.responses.clearalock.errorHR.title,
+            description: locales({ locale: interaction.locale, guildLocale: getLocale!.getLocale![0].locale })!.admin.responses.clearalock.errorHR.description
+          }).setColor("Red");
+          await interaction.editReply({ embeds: [embedErrorHR] });
+        }
       }
     }
   }
 
   @Slash({
     name: "telegramconnect",
-    description: "Connect telegram bot"
+    description: "Connect telegram bot",
+    nameLocalizations: {
+      "en-US": locales({ language: "en-US" })!.admin.commands.telegramconnect.title
+    },
+    descriptionLocalizations: {
+      "en-US": locales({ language: "en-US" })!.admin.commands.telegramconnect.description
+    }
   })
   async telegramconnect(
     @SlashOption({
       name: "code",
       description: "code",
+      nameLocalizations: {
+        "en-US": locales({ language: "en-US" })!.admin.commands.telegramconnect.options.code.name
+      },
+      descriptionLocalizations: {
+        "en-US": locales({ language: "en-US" })!.admin.commands.telegramconnect.options.code.description
+      },
       required: true,
       type: ApplicationCommandOptionType.String
     })
@@ -219,9 +304,228 @@ export class Admin {
     interaction: CommandInteraction
   ) {
     if (!interaction.inGuild()) {
-      await interaction.reply({content: "what!?"});
+      await interaction.reply({ content: "what!?" });
     } else {
-      
+      await interaction.deferReply({ ephemeral: true });
+      const getChat = await telegramChatsModel.getChat(parseInt(code.split(":")[0]));
+      const getConnect = await telegramConnectsModel.getConnect(interaction.guildId);
+      const getLocale = await localesModel.getLocale(interaction.guildId);
+
+      if (!getLocale!.status) {
+        //What to do if the server localization is not configured
+        if (!getChat!.status) {
+          //What to do if the chat is not exist
+          switch (getChat!.code) {
+            case 0:
+              let embedErrorDE = new EmbedBuilder({
+                title: locales({ locale: interaction.locale, language: "en-US" })!.admin.responses.telegramconnect.errorDE.title,
+                description: locales({ locale: interaction.locale, language: "en-US" })!.admin.responses.telegramconnect.errorDE.description
+              }).setColor("Red");
+              await interaction.editReply({ embeds: [embedErrorDE] });
+              break;
+            case 1:
+              let embedErrorSC = new EmbedBuilder({
+                title: locales({ locale: interaction.locale, language: "en-US" })!.admin.responses.telegramconnect.errorSC.title,
+                description: locales({ locale: interaction.locale, language: "en-US" })!.admin.responses.telegramconnect.errorSC.description
+              }).setColor("#000");
+              await interaction.editReply({ embeds: [embedErrorSC] });
+              break;
+          }
+        } else {
+          //What to do if the chat is exist
+          if (!getConnect!.status && getConnect!.code == 0) {
+            //If the connection does not already exist
+            const addConnect = await telegramConnectsModel.addConnect(interaction.guildId, code);
+
+            if (!addConnect!.status) {
+              switch (addConnect!.code) {
+                case 0:
+                  let embedErrorCA = new EmbedBuilder({
+                    title: locales({ locale: interaction.locale, language: "en-US" })!.admin.responses.telegramconnect.errorCA.title,
+                    description: locales({ locale: interaction.locale, language: "en-US" })!.admin.responses.telegramconnect.errorCA.description
+                  }).setColor("Red");
+                  await interaction.editReply({ embeds: [embedErrorCA] });
+                  break;
+                case 1:
+                  let embedErrorSC = new EmbedBuilder({
+                    title: locales({ locale: interaction.locale, language: "en-US" })!.admin.responses.telegramconnect.errorSC.title,
+                    description: locales({ locale: interaction.locale, language: "en-US" })!.admin.responses.telegramconnect.errorSC.description
+                  }).setColor("#000");
+                  await interaction.editReply({ embeds: [embedErrorSC] });
+                  break;
+              }
+            } else {
+              sendMessagetoTelegram(getChat!.getChat![0].id, locales({ locale: interaction.locale, language: "en-US" })!.admin.telegram.connectMessage.replace("$server", interaction.guild!.name))
+                .then(async () => {
+                  let embedSuccess = new EmbedBuilder({
+                    title: locales({ locale: interaction.locale, language: "en-US" })!.admin.responses.telegramconnect.success.title,
+                    description: locales({ locale: interaction.locale, language: "en-US" })!.admin.responses.telegramconnect.success.description
+                  }).setColor("Green");
+                  await interaction.editReply({ embeds: [embedSuccess] });
+                })
+                .catch(async (reason) => {
+                  let embedErrorTE = new EmbedBuilder({
+                    title: locales({ locale: interaction.locale, language: "en-US" })!.admin.responses.telegramconnect.errorTE.title,
+                    description: locales({ locale: interaction.locale, language: "en-US" })!.admin.responses.telegramconnect.errorTE.description.replace("$reason", reason)
+                  }).setColor("Orange");
+                  await interaction.editReply({ embeds: [embedErrorTE] });
+                })
+            }
+          } else if (!getConnect!.status && getConnect!.code == 1) {
+            //Error on check
+            let embedErrorSC = new EmbedBuilder({
+              title: locales({ locale: interaction.locale, language: "en-US" })!.admin.responses.telegramconnect.errorSC.title,
+              description: locales({ locale: interaction.locale, language: "en-US" })!.admin.responses.telegramconnect.errorSC.description
+            }).setColor("#000");
+            await interaction.editReply({ embeds: [embedErrorSC] });
+          } else {
+            //If the connection already exist
+            const setConnect = await telegramConnectsModel.setConnect(interaction.guildId, { code });
+
+            if (!setConnect!.status) {
+              switch (setConnect!.code) {
+                case 0:
+                  let embedErrorCA = new EmbedBuilder({
+                    title: locales({ locale: interaction.locale, language: "en-US" })!.admin.responses.telegramconnect.errorCA.title,
+                    description: locales({ locale: interaction.locale, language: "en-US" })!.admin.responses.telegramconnect.errorCA.description
+                  }).setColor("Red");
+                  await interaction.editReply({ embeds: [embedErrorCA] });
+                  break;
+                case 1:
+                  let embedErrorSC = new EmbedBuilder({
+                    title: locales({ locale: interaction.locale, language: "en-US" })!.admin.responses.telegramconnect.errorSC.title,
+                    description: locales({ locale: interaction.locale, language: "en-US" })!.admin.responses.telegramconnect.errorSC.description
+                  }).setColor("#000");
+                  await interaction.editReply({ embeds: [embedErrorSC] });
+                  break;
+              }
+            } else {
+              sendMessagetoTelegram(getChat!.getChat![0].id, locales({ locale: interaction.locale, language: "en-US" })!.admin.telegram.connectMessage.replace("$server", interaction.guild!.name))
+                .then(async () => {
+                  let embedSuccess = new EmbedBuilder({
+                    title: locales({ locale: interaction.locale, language: "en-US" })!.admin.responses.telegramconnect.success.title,
+                    description: locales({ locale: interaction.locale, language: "en-US" })!.admin.responses.telegramconnect.success.description
+                  }).setColor("Green");
+                  await interaction.editReply({ embeds: [embedSuccess] });
+                })
+                .catch(async (reason) => {
+                  let embedErrorTE = new EmbedBuilder({
+                    title: locales({ locale: interaction.locale, language: "en-US" })!.admin.responses.telegramconnect.errorTE.title,
+                    description: locales({ locale: interaction.locale, language: "en-US" })!.admin.responses.telegramconnect.errorTE.description.replace("$reason", reason)
+                  }).setColor("Orange");
+                  await interaction.editReply({ embeds: [embedErrorTE] });
+                })
+            }
+          }
+        }
+      } else {
+        //What to do if the server localization is configured
+        if (!getChat!.status) {
+          //What to do if the chat is not exist
+          switch (getChat!.code) {
+            case 0:
+              let embedErrorDE = new EmbedBuilder({
+                title: locales({ locale: interaction.locale, guildLocale: getLocale!.getLocale![0].locale })!.admin.responses.telegramconnect.errorDE.title,
+                description: locales({ locale: interaction.locale, guildLocale: getLocale!.getLocale![0].locale })!.admin.responses.telegramconnect.errorDE.description
+              }).setColor("Red");
+              await interaction.editReply({ embeds: [embedErrorDE] });
+              break;
+            case 1:
+              let embedErrorSC = new EmbedBuilder({
+                title: locales({ locale: interaction.locale, guildLocale: getLocale!.getLocale![0].locale })!.admin.responses.telegramconnect.errorSC.title,
+                description: locales({ locale: interaction.locale, guildLocale: getLocale!.getLocale![0].locale })!.admin.responses.telegramconnect.errorSC.description
+              }).setColor("#000");
+              await interaction.editReply({ embeds: [embedErrorSC] });
+              break;
+          }
+        } else {
+          //What to do if the chat is exist
+          if (!getConnect!.status && getConnect!.code == 0) {
+            //If the connection does not already exist
+            const addConnect = await telegramConnectsModel.addConnect(interaction.guildId, code);
+
+            if (!addConnect!.status) {
+              switch (addConnect!.code) {
+                case 0:
+                  let embedErrorCA = new EmbedBuilder({
+                    title: locales({ locale: interaction.locale, guildLocale: getLocale!.getLocale![0].locale })!.admin.responses.telegramconnect.errorCA.title,
+                    description: locales({ locale: interaction.locale, guildLocale: getLocale!.getLocale![0].locale })!.admin.responses.telegramconnect.errorCA.description
+                  }).setColor("Red");
+                  await interaction.editReply({ embeds: [embedErrorCA] });
+                  break;
+                case 1:
+                  let embedErrorSC = new EmbedBuilder({
+                    title: locales({ locale: interaction.locale, guildLocale: getLocale!.getLocale![0].locale })!.admin.responses.telegramconnect.errorSC.title,
+                    description: locales({ locale: interaction.locale, guildLocale: getLocale!.getLocale![0].locale })!.admin.responses.telegramconnect.errorSC.description
+                  }).setColor("#000");
+                  await interaction.editReply({ embeds: [embedErrorSC] });
+                  break;
+              }
+            } else {
+              sendMessagetoTelegram(getChat!.getChat![0].id, locales({ locale: interaction.locale, guildLocale: getLocale!.getLocale![0].locale })!.admin.telegram.connectMessage.replace("$server", interaction.guild!.name))
+                .then(async () => {
+                  let embedSuccess = new EmbedBuilder({
+                    title: locales({ locale: interaction.locale, guildLocale: getLocale!.getLocale![0].locale })!.admin.responses.telegramconnect.success.title,
+                    description: locales({ locale: interaction.locale, guildLocale: getLocale!.getLocale![0].locale })!.admin.responses.telegramconnect.success.description
+                  }).setColor("Green");
+                  await interaction.editReply({ embeds: [embedSuccess] });
+                })
+                .catch(async (reason) => {
+                  let embedErrorTE = new EmbedBuilder({
+                    title: locales({ locale: interaction.locale, guildLocale: getLocale!.getLocale![0].locale })!.admin.responses.telegramconnect.errorTE.title,
+                    description: locales({ locale: interaction.locale, guildLocale: getLocale!.getLocale![0].locale })!.admin.responses.telegramconnect.errorTE.description.replace("$reason", reason)
+                  }).setColor("Orange");
+                  await interaction.editReply({ embeds: [embedErrorTE] });
+                })
+            }
+          } else if (!getConnect!.status && getConnect!.code == 1) {
+            //Error on check
+            let embedErrorSC = new EmbedBuilder({
+              title: locales({ locale: interaction.locale, guildLocale: getLocale!.getLocale![0].locale })!.admin.responses.telegramconnect.errorSC.title,
+              description: locales({ locale: interaction.locale, guildLocale: getLocale!.getLocale![0].locale })!.admin.responses.telegramconnect.errorSC.description
+            }).setColor("#000");
+            await interaction.editReply({ embeds: [embedErrorSC] });
+          } else {
+            //If the connection already exist
+            const setConnect = await telegramConnectsModel.setConnect(interaction.guildId, { code });
+
+            if (!setConnect!.status) {
+              switch (setConnect!.code) {
+                case 0:
+                  let embedErrorCA = new EmbedBuilder({
+                    title: locales({ locale: interaction.locale, guildLocale: getLocale!.getLocale![0].locale })!.admin.responses.telegramconnect.errorCA.title,
+                    description: locales({ locale: interaction.locale, guildLocale: getLocale!.getLocale![0].locale })!.admin.responses.telegramconnect.errorCA.description
+                  }).setColor("Red");
+                  await interaction.editReply({ embeds: [embedErrorCA] });
+                  break;
+                case 1:
+                  let embedErrorSC = new EmbedBuilder({
+                    title: locales({ locale: interaction.locale, guildLocale: getLocale!.getLocale![0].locale })!.admin.responses.telegramconnect.errorSC.title,
+                    description: locales({ locale: interaction.locale, guildLocale: getLocale!.getLocale![0].locale })!.admin.responses.telegramconnect.errorSC.description
+                  }).setColor("#000");
+                  await interaction.editReply({ embeds: [embedErrorSC] });
+                  break;
+              }
+            } else {
+              sendMessagetoTelegram(getChat!.getChat![0].id, locales({ locale: interaction.locale, guildLocale: getLocale!.getLocale![0].locale })!.admin.telegram.connectMessage.replace("$server", interaction.guild!.name))
+                .then(async () => {
+                  let embedSuccess = new EmbedBuilder({
+                    title: locales({ locale: interaction.locale, guildLocale: getLocale!.getLocale![0].locale })!.admin.responses.telegramconnect.success.title,
+                    description: locales({ locale: interaction.locale, guildLocale: getLocale!.getLocale![0].locale })!.admin.responses.telegramconnect.success.description
+                  }).setColor("Green");
+                  await interaction.editReply({ embeds: [embedSuccess] });
+                })
+                .catch(async (reason) => {
+                  let embedErrorTE = new EmbedBuilder({
+                    title: locales({ locale: interaction.locale, guildLocale: getLocale!.getLocale![0].locale })!.admin.responses.telegramconnect.errorTE.title,
+                    description: locales({ locale: interaction.locale, guildLocale: getLocale!.getLocale![0].locale })!.admin.responses.telegramconnect.errorTE.description.replace("$reason", reason)
+                  }).setColor("Orange");
+                  await interaction.editReply({ embeds: [embedErrorTE] });
+                })
+            }
+          }
+        }
+      }
     }
   }
 }
