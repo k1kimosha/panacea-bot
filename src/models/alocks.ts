@@ -6,7 +6,7 @@ class aLock {
         const getALock: { uuid: string, actions: number }[] | number = await mysqlController.execute("SELECT * FROM `alocks` WHERE uuid = ?", [uuid]);
 
         if (getALock === 404)
-            return { status: false, code: 404 };
+            return { status: false, code: 1 };
 
         if (typeof getALock != "number") {
             if (!getALock.length)
@@ -20,7 +20,7 @@ class aLock {
         const addALock: { affectedRows: number } | number = await mysqlController.execute("INSERT INTO `alocks` (uuid, actions) VALUES (?, 1)", [uuid]);
 
         if (addALock === 404)
-            return { status: false, code: 404 };
+            return { status: false, code: 1 };
 
         if (typeof addALock != "number") {
             if (!addALock.affectedRows)
@@ -34,7 +34,7 @@ class aLock {
         const setALock: { changedRows: number } | number = await mysqlController.execute("UPDATE `alocks` SET ? WHERE uuid = ?", [options, uuid]);
 
         if (setALock === 404)
-            return { status: false, code: 404 };
+            return { status: false, code: 1 };
 
         if (typeof setALock != "number") {
             if (!setALock.changedRows)
@@ -48,7 +48,7 @@ class aLock {
         const delALock: { affectedRows: number } | number = await mysqlController.execute("DELETE FROM `alocks` WHERE uuid = ?", [uuid]);
 
         if (delALock === 404)
-            return { status: false, code: 404 };
+            return { status: false, code: 1 };
 
         if (typeof delALock != "number") {
             if (!delALock.affectedRows)
