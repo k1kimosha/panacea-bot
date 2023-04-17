@@ -35,6 +35,16 @@ export const english = {
                         description: "Telegram chat code"
                     }
                 }
+            },
+            audit: {
+                title: "audit",
+                description: "Set up an audit channel",
+                options: {
+                    channel: {
+                        name: "channel",
+                        description: "Audit Channel"
+                    }
+                }
             }
         },
         responses: {
@@ -79,6 +89,10 @@ export const english = {
                     title: "Success",
                     description: "Telegram chat connected"
                 },
+                errorAE: {
+                    title: "Error",
+                    description: "This chat is already connected to this server"
+                },
                 errorDE: {
                     title: "Error",
                     description: "The specified chat code does not exist"
@@ -94,6 +108,24 @@ export const english = {
                 errorTE: {
                     title: "Telegram error",
                     description: "There was an error on the telegram side, the chat is connected but sending messages is not possible for the reason: $reason"
+                }
+            },
+            audit: {
+                success: {
+                    title: "Success",
+                    description: "Channel $channel is successfully set as an audit channel"
+                },
+                errorAE: {
+                    title: "Error",
+                    description: "This channel is already set as the audit channel of this server"
+                },
+                errorCA: {
+                    title: "Error",
+                    description: "Unable to set audit channel"
+                },
+                errorSC: {
+                    title: "Unforeseeable error",
+                    description: "There was an error on the server side, it is temporarily impossible to change the language"
                 }
             }
         },

@@ -1,12 +1,13 @@
-import { ApplicationCommandOptionType, CommandInteraction, EmbedBuilder, GuildMember, Locale } from "discord.js";
+import { ApplicationCommandOptionType, ChannelType, CommandInteraction, EmbedBuilder, GuildMember, GuildTextBasedChannel, Locale } from "discord.js";
 import { Discord, Slash, SlashChoice, SlashGroup, SlashOption } from "discordx";
-import { locales } from "../locales/locales.js";
-import localesModel from "../models/locales.js";
 import alocksModel from "../models/alocks.js";
-import { aLock } from "../main.js";
+import localesModel from "../models/locales.js";
 import telegramChatsModel from "../models/telegramChats.js";
 import telegramConnectsModel from "../models/telegramConnects.js";
 import sendMessagetoTelegram from "../tg/contoller.js";
+import { locales } from "../locales/locales.js";
+import { aLock } from "../main.js";
+import auditChannelsModel from "../models/auditChannels.js";
 
 @Discord()
 @SlashGroup({
@@ -90,11 +91,11 @@ export class Admin {
                     break;
                   case 1:
                     //Returns an error in case of a database crash
-                    let embedErrorCS = new EmbedBuilder({
+                    let embedErrorSC = new EmbedBuilder({
                       title: locales({ locale: interaction.locale, language: locale })!.admin.responses.locales.errorSC.title,
                       description: locales({ locale: interaction.locale, language: locale })!.admin.responses.locales.errorSC.description
                     }).setColor("#000");
-                    await interaction.editReply({ embeds: [embedErrorCS] });
+                    await interaction.editReply({ embeds: [embedErrorSC] });
                     break;
                 }
               } else {
@@ -109,11 +110,11 @@ export class Admin {
             break;
           case 1:
             //Returns an error in case of a database crash
-            let embedErrorCS = new EmbedBuilder({
+            let embedErrorSC = new EmbedBuilder({
               title: locales({ locale: locale, language: "en-US" })!.admin.responses.locales.errorSC.title,
               description: locales({ locale: locale, language: "en-US" })!.admin.responses.locales.errorSC.description
             }).setColor("#000000");
-            await interaction.editReply({ embeds: [embedErrorCS] });
+            await interaction.editReply({ embeds: [embedErrorSC] });
             break;
         }
       } else {
@@ -146,11 +147,11 @@ export class Admin {
                 break;
               case 1:
                 //Returns an error in case of a database crash
-                let embedErrorCS = new EmbedBuilder({
+                let embedErrorSC = new EmbedBuilder({
                   title: locales({ locale: interaction.locale, guildLocale: getLocale!.getLocale![0].locale })!.admin.responses.locales.errorSC.title,
                   description: locales({ locale: interaction.locale, guildLocale: getLocale!.getLocale![0].locale })!.admin.responses.locales.errorSC.description
                 }).setColor("#000");
-                await interaction.editReply({ embeds: [embedErrorCS] });
+                await interaction.editReply({ embeds: [embedErrorSC] });
                 break;
             }
           } else {
@@ -386,8 +387,8 @@ export class Admin {
               switch (setConnect!.code) {
                 case 0:
                   let embedErrorCA = new EmbedBuilder({
-                    title: locales({ locale: interaction.locale, language: "en-US" })!.admin.responses.telegramconnect.errorCA.title,
-                    description: locales({ locale: interaction.locale, language: "en-US" })!.admin.responses.telegramconnect.errorCA.description
+                    title: locales({ locale: interaction.locale, language: "en-US" })!.admin.responses.telegramconnect.errorAE.title,
+                    description: locales({ locale: interaction.locale, language: "en-US" })!.admin.responses.telegramconnect.errorAE.description
                   }).setColor("Red");
                   await interaction.editReply({ embeds: [embedErrorCA] });
                   break;
@@ -493,8 +494,8 @@ export class Admin {
               switch (setConnect!.code) {
                 case 0:
                   let embedErrorCA = new EmbedBuilder({
-                    title: locales({ locale: interaction.locale, guildLocale: getLocale!.getLocale![0].locale })!.admin.responses.telegramconnect.errorCA.title,
-                    description: locales({ locale: interaction.locale, guildLocale: getLocale!.getLocale![0].locale })!.admin.responses.telegramconnect.errorCA.description
+                    title: locales({ locale: interaction.locale, guildLocale: getLocale!.getLocale![0].locale })!.admin.responses.telegramconnect.errorAE.title,
+                    description: locales({ locale: interaction.locale, guildLocale: getLocale!.getLocale![0].locale })!.admin.responses.telegramconnect.errorAE.description
                   }).setColor("Red");
                   await interaction.editReply({ embeds: [embedErrorCA] });
                   break;
@@ -523,6 +524,168 @@ export class Admin {
                   await interaction.editReply({ embeds: [embedErrorTE] });
                 })
             }
+          }
+        }
+      }
+    }
+  }
+
+  @Slash({
+    name: "audit",
+    description: "audit"
+  })
+  async audit(
+    @SlashOption({
+      name: "channel",
+      description: "channel",
+      required: true,
+      type: ApplicationCommandOptionType.Channel,
+      channelTypes: [ChannelType.GuildText]
+    })
+    channel: GuildTextBasedChannel,
+    interaction: CommandInteraction
+  ) {
+    if (!interaction.inGuild()) {
+      await interaction.reply({ content: "what!?" })
+    } else {
+      await interaction.deferReply({ ephemeral: true });
+      const getChannel = await auditChannelsModel.getChannel(interaction.guildId);
+      const getLocale = await localesModel.getLocale(interaction.guildId);
+
+      if (!getLocale!.status) {
+        //What to do if the server localization is not configured
+        if (!getChannel!.status) {
+          //What to do if the channel is not exist
+          switch (getChannel!.code) {
+            case 0:
+              const addChannel = await auditChannelsModel.addChannel(interaction.guildId, channel.id);
+              if (!addChannel!.status) {
+                switch (addChannel!.code) {
+                  case 0:
+                    let embedErrorCA = new EmbedBuilder({
+                      title: locales({ locale: interaction.locale, language: "en-US" })!.admin.responses.audit.errorCA.title,
+                      description: locales({ locale: interaction.locale, language: "en-US" })!.admin.responses.audit.errorCA.description
+                    }).setColor("Red");
+                    await interaction.editReply({ embeds: [embedErrorCA] });
+                    break;
+                  case 1:
+                    let embedErrorSC = new EmbedBuilder({
+                      title: locales({ locale: interaction.locale, language: "en-US" })!.admin.responses.audit.errorSC.title,
+                      description: locales({ locale: interaction.locale, language: "en-US" })!.admin.responses.audit.errorSC.description
+                    }).setColor("#000");
+                    await interaction.editReply({ embeds: [embedErrorSC] });
+                    break;
+                }
+              } else {
+                let embedSuccess = new EmbedBuilder({
+                  title: locales({ locale: interaction.locale, language: "en-US" })!.admin.responses.audit.success.title,
+                  description: locales({ locale: interaction.locale, language: "en-US" })!.admin.responses.audit.success.description.replace("$channel", channel.name)
+                }).setColor("Green");
+                await interaction.editReply({ embeds: [embedSuccess] });
+              }
+              break;
+            case 1:
+              let embedErrorSC = new EmbedBuilder({
+                title: locales({ locale: interaction.locale, language: "en-US" })!.admin.responses.audit.errorSC.title,
+                description: locales({ locale: interaction.locale, language: "en-US" })!.admin.responses.audit.errorSC.description
+              }).setColor("#000");
+              await interaction.editReply({ embeds: [embedErrorSC] });
+              break;
+          }
+        } else {
+          const setChannel = await auditChannelsModel.setChannel(interaction.guildId, { channelId: channel.id });
+
+          if (!setChannel!.status) {
+            switch (setChannel!.code) {
+              case 0:
+                let embedErrorAE = new EmbedBuilder({
+                  title: locales({ locale: interaction.locale, language: "en-US" })!.admin.responses.audit.errorAE.title,
+                  description: locales({ locale: interaction.locale, language: "en-US" })!.admin.responses.audit.errorAE.description
+                }).setColor("Red");
+                await interaction.editReply({ embeds: [embedErrorAE] });
+                break;
+              case 1:
+                let embedErrorSC = new EmbedBuilder({
+                  title: locales({ locale: interaction.locale, language: "en-US" })!.admin.responses.audit.errorSC.title,
+                  description: locales({ locale: interaction.locale, language: "en-US" })!.admin.responses.audit.errorSC.description
+                }).setColor("#000");
+                await interaction.editReply({ embeds: [embedErrorSC] });
+                break;
+            }
+          } else {
+            let embedSuccess = new EmbedBuilder({
+              title: locales({ locale: interaction.locale, language: "en-US" })!.admin.responses.audit.success.title,
+              description: locales({ locale: interaction.locale, language: "en-US" })!.admin.responses.audit.success.description.replace("$channel", channel.name)
+            }).setColor("Green");
+            await interaction.editReply({ embeds: [embedSuccess] });
+          }
+        }
+      } else {
+        //What to do if the server localization is configured
+        if (!getChannel!.status) {
+          //What to do if the channel is exist
+          switch (getChannel!.code) {
+            case 0:
+              const addChannel = await auditChannelsModel.addChannel(interaction.guildId, channel.id);
+              if (!addChannel!.status) {
+                switch (addChannel!.code) {
+                  case 0:
+                    let embedErrorCA = new EmbedBuilder({
+                      title: locales({ locale: interaction.locale, guildLocale: getLocale!.getLocale![0].locale })!.admin.responses.audit.errorCA.title,
+                      description: locales({ locale: interaction.locale, guildLocale: getLocale!.getLocale![0].locale })!.admin.responses.audit.errorCA.description
+                    }).setColor("Red");
+                    await interaction.editReply({ embeds: [embedErrorCA] });
+                    break;
+                  case 1:
+                    let embedErrorSC = new EmbedBuilder({
+                      title: locales({ locale: interaction.locale, guildLocale: getLocale!.getLocale![0].locale })!.admin.responses.audit.errorSC.title,
+                      description: locales({ locale: interaction.locale, guildLocale: getLocale!.getLocale![0].locale })!.admin.responses.audit.errorSC.description
+                    }).setColor("#000");
+                    await interaction.editReply({ embeds: [embedErrorSC] });
+                    break;
+                }
+              } else {
+                let embedSuccess = new EmbedBuilder({
+                  title: locales({ locale: interaction.locale, guildLocale: getLocale!.getLocale![0].locale })!.admin.responses.audit.success.title,
+                  description: locales({ locale: interaction.locale, guildLocale: getLocale!.getLocale![0].locale })!.admin.responses.audit.success.description.replace("$channel", channel.name)
+                }).setColor("Green");
+                await interaction.editReply({ embeds: [embedSuccess] });
+              }
+              break;
+            case 1:
+              let embedErrorSC = new EmbedBuilder({
+                title: locales({ locale: interaction.locale, guildLocale: getLocale!.getLocale![0].locale })!.admin.responses.audit.errorSC.title,
+                description: locales({ locale: interaction.locale, guildLocale: getLocale!.getLocale![0].locale })!.admin.responses.audit.errorSC.description
+              }).setColor("#000");
+              await interaction.editReply({ embeds: [embedErrorSC] });
+              break;
+          }
+        } else {
+          const setChannel = await auditChannelsModel.setChannel(interaction.guildId, { channelId: channel.id });
+
+          if (!setChannel!.status) {
+            switch (setChannel!.code) {
+              case 0:
+                let embedErrorAE = new EmbedBuilder({
+                  title: locales({ locale: interaction.locale, guildLocale: getLocale!.getLocale![0].locale })!.admin.responses.audit.errorAE.title,
+                  description: locales({ locale: interaction.locale, guildLocale: getLocale!.getLocale![0].locale })!.admin.responses.audit.errorAE.description
+                }).setColor("Red");
+                await interaction.editReply({ embeds: [embedErrorAE] });
+                break;
+              case 1:
+                let embedErrorSC = new EmbedBuilder({
+                  title: locales({ locale: interaction.locale, guildLocale: getLocale!.getLocale![0].locale })!.admin.responses.audit.errorSC.title,
+                  description: locales({ locale: interaction.locale, guildLocale: getLocale!.getLocale![0].locale })!.admin.responses.audit.errorSC.description
+                }).setColor("#000");
+                await interaction.editReply({ embeds: [embedErrorSC] });
+                break;
+            }
+          } else {
+            let embedSuccess = new EmbedBuilder({
+              title: locales({ locale: interaction.locale, guildLocale: getLocale!.getLocale![0].locale })!.admin.responses.audit.success.title,
+              description: locales({ locale: interaction.locale, guildLocale: getLocale!.getLocale![0].locale })!.admin.responses.audit.success.description.replace("$channel", channel.name)
+            }).setColor("Green");
+            await interaction.editReply({ embeds: [embedSuccess] });
           }
         }
       }
